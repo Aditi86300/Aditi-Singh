@@ -1,0 +1,217 @@
+from tkinter import *
+class Account:
+    def __init__(self, acc_no, holder_id, balance=0.0):
+        self.acc_no = acc_no
+        self.holder_id = holder_id
+        self.balance = balance
+        self.history = []
+
+    def deposit(self, amount):
+        self.balance += amount
+        self.history.append("Deposited ₹" + str(amount))
+
+    def withdraw(self, amount):
+        if amount > 0 and amount <= self.balance:
+            self.balance -= amount
+            self.history.append("Withdrawn ₹" + str(amount))
+        else:
+            self.history.append("Withdrawal failed: insufficient balance or invalid amount.")
+
+    def show_history(self):
+        text = ""
+        for record in self.history:
+            text += " - " + record + "\n"
+        return text
+
+class SavingsAccount(Account):
+    def __init__(self, acc_no, holder_id, balance=0.0, interest_rate=0.02):
+        Account.__init__(self, acc_no, holder_id, balance)
+        self.interest_rate = interest_rate
+
+    def apply_interest(self):
+        interest = self.balance * self.interest_rate
+        self.balance += interest
+        self.history.append("Interest applied ₹" + format(interest, ".2f"))
+
+class Customer:
+    def __init__(self, cust_id, name):
+        self.cust_id = cust_id
+        self.name = name
+        self.accounts = []
+
+    def add_account(self, acc):
+        self.accounts.append(acc)
+
+    def get_summary(self):
+        summary = "Customer ID: " + self.cust_id + "\nName: " + self.name + "\n"
+        for acc in self.accounts:
+            summary += "\nAccount No: " + acc.acc_no
+            summary += "\nBalance: ₹" + format(acc.balance, ".2f")
+            summary += "\nHistory:\n" + acc.show_history()
+        return summary
+
+class Bank:
+    def __init__(self):
+        self.customers = {}
+        self.accounts = {}
+        self.acc_counter = 1
+
+    def create_customer(self, cid, name):
+        if cid not in self.customers:
+            self.customers[cid] = Customer(cid, name)
+            return "Customer created successfully."
+        else:
+            return "Customer already exists."
+
+    def open_account(self, cid, amt_text):
+        if cid in self.customers:
+            if amt_text.replace('.', '', 1).isdigit():
+                amt = float(amt_text)
+                acc_no = "A" + str(self.acc_counter).zfill(4)
+                self.acc_counter += 1
+                acc = SavingsAccount(acc_no, cid, amt)
+                self.accounts[acc_no] = acc
+                self.customers[cid].add_account(acc)
+                return "Savings account '" + acc_no + "' opened with ₹" + str(amt) + "."
+            else:
+                return "Enter a valid amount."
+        else:
+            return "Customer not found."
+
+    def deposit(self, acc_no, amt_text):
+        if acc_no in self.accounts:
+            if amt_text.replace('.', '', 1).isdigit():
+                amt = float(amt_text)
+                self.accounts[acc_no].deposit(amt)
+                return "Deposited ₹" + str(amt) + " to " + acc_no + "."
+            else:
+                return "Enter a valid amount."
+        else:
+            return "Account not found."
+
+    def withdraw(self, acc_no, amt_text):
+        if acc_no in self.accounts:
+            if amt_text.replace('.', '', 1).isdigit():
+                amt = float(amt_text)
+                self.accounts[acc_no].withdraw(amt)
+                return "Withdrawal of ₹" + str(amt) + " attempted from " + acc_no + "."
+            else:
+                return "Enter a valid amount."
+        else:
+            return "Account not found."
+
+    def apply_interest(self):
+        for acc in self.accounts.values():
+            if type(acc) == SavingsAccount:
+                acc.apply_interest()
+        return "Interest applied to all savings accounts."
+
+    def show_all_customers(self):
+        if len(self.customers) == 0:
+            return "No customers available."
+        result = ""
+        for cust in self.customers.values():
+            result += cust.get_summary() + "\n\n"
+        return result
+    
+bank = Bank()
+root = Tk()
+root.title("Banking System GUI")
+root.geometry("520x700")
+root.configure(bg="light blue")
+
+font_style = ("Arial", 10, "bold")
+
+input_frame = Frame(root, bg="light blue")
+input_frame.pack(pady=10)
+
+Label(input_frame, text="Customer ID", font=font_style, bg="light blue").grid(row=0, column=0, padx=5, pady=5)
+cust_entry = Entry(input_frame)
+cust_entry.grid(row=0, column=1, padx=5, pady=5)
+
+Label(input_frame, text="Name", font=font_style, bg="light blue").grid(row=1, column=0, padx=5, pady=5)
+name_entry = Entry(input_frame)
+name_entry.grid(row=1, column=1, padx=5, pady=5)
+
+Label(input_frame, text="Account No", font=font_style, bg="light blue").grid(row=2, column=0, padx=5, pady=5)
+acc_entry = Entry(input_frame)
+acc_entry.grid(row=2, column=1, padx=5, pady=5)
+
+Label(input_frame, text="Amount", font=font_style, bg="light blue").grid(row=3, column=0, padx=5, pady=5)
+amt_entry = Entry(input_frame)
+amt_entry.grid(row=3, column=1, padx=5, pady=5)
+
+
+output = Text(root, height=12, width=60, font=font_style)
+output.pack(pady=10)
+
+feedback_label = Label(root, text="", font=("Arial", 10, "italic"), bg="light blue", fg="dark green")
+feedback_label.pack()
+
+feedback_box = Text(root, height=4, width=60, font=("Arial", 10))
+feedback_box.pack(pady=(0, 10))
+
+def show_output(message):
+    output.insert(END, message + "\n")
+    output.see(END)
+
+def create_customer():
+    cid = cust_entry.get()
+    name = name_entry.get()
+    result = bank.create_customer(cid, name)
+    show_output(result)
+
+def open_account():
+    cid = cust_entry.get()
+    amt_text = amt_entry.get()
+    result = bank.open_account(cid, amt_text)
+    show_output(result)
+
+def deposit():
+    acc_no = acc_entry.get()
+    amt_text = amt_entry.get()
+    result = bank.deposit(acc_no, amt_text)
+    show_output(result)
+
+def withdraw():
+    acc_no = acc_entry.get()
+    amt_text = amt_entry.get()
+    result = bank.withdraw(acc_no, amt_text)
+    show_output(result)
+
+def apply_interest():
+    result = bank.apply_interest()
+    show_output(result)
+
+def show_info():
+    info = bank.show_all_customers()
+    show_output(info)
+
+def clear_output():
+    output.delete("1.0", END)
+    feedback_box.delete("1.0", END)
+    feedback_label.config(text="Output cleared. Please provide your feedback below:")
+
+def submit_feedback():
+    feedback = feedback_box.get("1.0", END)
+    if len(feedback.replace("\n", "").replace(" ", "")) > 0:
+        show_output("Thank you for your feedback:\n" + feedback)
+        feedback_box.delete("1.0", END)
+        feedback_label.config(text="")
+    else:
+        show_output("Feedback box is empty.")
+
+btn_frame = Frame(root, bg="light blue")
+btn_frame.pack(pady=10)
+
+Button(btn_frame, text="Create Customer", font=font_style, command=create_customer).grid(row=0, column=0, padx=5, pady=5)
+Button(btn_frame, text="Open Account", font=font_style, command=open_account).grid(row=0, column=1, padx=5, pady=5)
+Button(btn_frame, text="Deposit", font=font_style, command=deposit).grid(row=1, column=0, padx=5, pady=5)
+Button(btn_frame, text="Withdraw", font=font_style, command=withdraw).grid(row=1, column=1, padx=5, pady=5)
+Button(btn_frame, text="Apply Interest", font=font_style, command=apply_interest).grid(row=2, column=0, padx=5, pady=5)
+Button(btn_frame, text="Show Info", font=font_style, command=show_info).grid(row=2, column=1, padx=5, pady=5)
+Button(btn_frame, text="Clear Output", font=font_style, command=clear_output).grid(row=3, column=0, padx=5, pady=5)
+Button(btn_frame, text="Exit", font=font_style, command=root.destroy).grid(row=3, column=1, padx=5, pady=5)
+Button(btn_frame, text="Submit Feedback", font=font_style, command=submit_feedback).grid(row=4, column=0, columnspan=2, pady=5)
+
+root.mainloop()
