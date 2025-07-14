@@ -1,0 +1,42 @@
+from tkinter import *
+import random
+
+user_score = 0
+comp_score = 0
+choices = ['Rock', 'Paper', 'Scissors']
+
+def play(choice):
+    global user_score, comp_score
+    computer = random.choice(choices)
+
+    if choice == computer:
+        result = "It's a Tie!"
+    elif (choice == 'Rock' and computer == 'Scissors') or \
+         (choice == 'Paper' and computer == 'Rock') or \
+         (choice == 'Scissors' and computer == 'Paper'):
+        user_score += 1
+        result = "You Win!"
+    else:
+        comp_score += 1
+        result = "Computer Wins!"
+
+    result_label.config(text=f"You: {choice} | Computer: {computer}\n{result}")
+    score_label.config(text=f"Score: You {user_score} - {comp_score} Computer")
+
+root = Tk()
+root.title("Rock Paper Scissors")
+root.geometry("350x300")
+
+Label(root, text="Choose One:").pack(pady=10)
+
+Button(root, text="Rock", width=10, command=lambda: play('Rock')).pack(pady=2)
+Button(root, text="Paper", width=10, command=lambda: play('Paper')).pack(pady=2)
+Button(root, text="Scissors", width=10, command=lambda: play('Scissors')).pack(pady=2)
+
+result_label = Label(root, text="", pady=20)
+result_label.pack()
+
+score_label = Label(root, text="Score: You 0 - 0 Computer")
+score_label.pack()
+
+root.mainloop()
