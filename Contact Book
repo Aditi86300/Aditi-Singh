@@ -1,0 +1,82 @@
+from tkinter import *
+from tkinter import messagebox
+
+contacts = {}
+
+def add_contact():
+    name = name_entry.get()
+    phone = phone_entry.get()
+    if name and phone:
+        contacts[name] = phone
+        update_listbox()
+        clear_entries()
+    else:
+        messagebox.showwarning("Missing Info", "Name and phone required.")
+
+def view_contact():
+    try:
+        selected = listbox.get(ACTIVE)
+        name_entry.delete(0, END)
+        name_entry.insert(0, selected)
+        phone_entry.delete(0, END)
+        phone_entry.insert(0, contacts[selected])
+    except:
+        messagebox.showwarning("Select Contact", "Please select a contact.")
+
+def update_contact():
+    name = name_entry.get()
+    phone = phone_entry.get()
+    if name in contacts:
+        contacts[name] = phone
+        update_listbox()
+        clear_entries()
+    else:
+        messagebox.showwarning("Not Found", "Contact doesn't exist.")
+
+def delete_contact():
+    try:
+        selected = listbox.get(ACTIVE)
+        del contacts[selected]
+        update_listbox()
+        clear_entries()
+    except:
+        messagebox.showwarning("Select Contact", "Please select a contact.")
+
+def search_contact():
+    query = name_entry.get()
+    listbox.delete(0, END)
+    for name in contacts:
+        if query.lower() in name.lower():
+            listbox.insert(END, name)
+
+def update_listbox():
+    listbox.delete(0, END)
+    for name in contacts:
+        listbox.insert(END, name)
+
+def clear_entries():
+    name_entry.delete(0, END)
+    phone_entry.delete(0, END)
+
+root = Tk()
+root.title("Contact Book")
+root.geometry("400x400")
+
+Label(root, text="Name:").pack()
+name_entry = Entry(root)
+name_entry.pack()
+
+Label(root, text="Phone:").pack()
+phone_entry = Entry(root)
+phone_entry.pack()
+
+Button(root, text="Add", width=10, command=add_contact).pack(pady=2)
+Button(root, text="View", width=10, command=view_contact).pack(pady=2)
+Button(root, text="Update", width=10, command=update_contact).pack(pady=2)
+Button(root, text="Delete", width=10, command=delete_contact).pack(pady=2)
+Button(root, text="Search", width=10, command=search_contact).pack(pady=2)
+
+listbox = Listbox(root)
+listbox.pack(fill=BOTH, expand=True, pady=10)
+
+root.mainloop()
